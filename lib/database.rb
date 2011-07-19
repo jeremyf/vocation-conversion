@@ -28,9 +28,22 @@ def init_db(force = false)
       table.column :thr_in_reply_to, :string
     end
   end
+
+  ActiveRecord::Schema.define do
+    create_table :assets, :force => force do |table|
+      table.column :post_id, :integer
+      table.column :source_url, :text
+      table.column :conductor_asset_id, :integer
+    end
+  end
 end
 
 
 class Post < ActiveRecord::Base
   serialize :categories
+  has_many :assets
+end
+
+class Asset < ActiveRecord::Base
+  belongs_to :post
 end

@@ -23,7 +23,7 @@ doc.search('entry').each_with_index do |entry, i|
       post.author_name = (entry/"author name").inner_html.strip
       post.author_email = (entry/"author email").inner_html.strip
       post.blogger_id = (entry/"id").inner_html.strip
-      post.content = (entry/"content").inner_html.strip
+      post.content = (entry/"content").inner_html.strip.gsub("&gt;", '>').gsub('&lt;', "<")
       post.published = (entry/"published").inner_html.strip
       post.updated = (entry/"updated").inner_html.strip
       post.thr_total = (entry/"thr:total").inner_html.strip.to_i
