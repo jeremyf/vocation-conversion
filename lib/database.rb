@@ -34,6 +34,7 @@ def init_db(force = false)
       table.column :post_id, :integer
       table.column :source_url, :text
       table.column :conductor_asset_id, :integer
+      table.column :local_filename, :text
     end
   end
 end
@@ -46,4 +47,8 @@ end
 
 class Asset < ActiveRecord::Base
   belongs_to :post
+
+  def path
+    "/assets/#{conductor_asset_id}/#{File.basename(local_filename)}"
+  end
 end
