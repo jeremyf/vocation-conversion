@@ -26,6 +26,7 @@ def init_db(force = false)
       table.column :updated, :datetime
       table.column :thr_total, :integer
       table.column :thr_in_reply_to, :string
+      table.column :conductor_admin_path, :string
     end
   end
 
@@ -43,12 +44,21 @@ end
 class Post < ActiveRecord::Base
   serialize :categories
   has_many :assets
+  scope :not_comments, where("#{quoted_table_name}.thr_in_reply_to IS NULL")
+
+  def news_attributes
+    {
+      :published_at => published,
+      :content => content,
+      :custom_author_name => "Holy Cross Vocations Indiana Province",
+    }
+  end
 end
 
 class Asset < ActiveRecord::Base
   belongs_to :post
 
-  def path
+  def conductor_path
     "/assets/#{conductor_asset_id}/#{File.basename(local_filename)}"
   end
 end
