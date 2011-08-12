@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-#!/usr/bin/env ruby
+
 require 'hpricot'
 require 'yaml'
 require 'logger'
@@ -36,7 +36,6 @@ def with_rest_timeout_retry(counter)
 end
 
 init_db(true)
-# init_db
 
 FileUtils.mkdir_p(File.join(File.dirname(__FILE__), '../log'))
 log     = Logger.new(File.join(File.dirname(__FILE__), '../log', "#{File.basename(__FILE__)}.log"), 5, 10*1024)
@@ -53,6 +52,7 @@ doc.search('entry').each_with_index do |entry, i|
       post.categories = (entry/'category').select {|el| el.get_attribute('scheme') == 'http://www.blogger.com/atom/ns#'}.collect {|el| el.get_attribute('term')}
       post.author_name = (entry/"author name").inner_html.strip
       post.author_email = (entry/"author email").inner_html.strip
+      post.title = (entry/"title").inner_html.strip
       post.blogger_id = (entry/"id").inner_html.strip
       post.content = (entry/"content").inner_html.strip.gsub("&gt;", '>').gsub('&lt;', "<")
       post.published = (entry/"published").inner_html.strip
@@ -63,6 +63,24 @@ doc.search('entry').each_with_index do |entry, i|
         post.thr_in_reply_to = thr_in_reply_to.get_attribute('ref').to_s.strip
       end
     }.save!
+  end
+end
+
+Category.all.each do |category|
+  with_rest_timeout_retry(3) do
+    begin
+      RestClient.post(
+      File.join("#{UPLOAD_SCHEME}://#{net_id}:#{password}@#{HOST}", '/admin/categories'),
+      {'category' => category.conductor_attributes, 'without_expire' => 'true'},
+      :accept => :html
+      )
+    rescue RestClient::Found => e
+      uri = URI.parse(e.response.headers[:location])
+      category.update_attribute(:conductor_admin_path, uri.path)
+      log.info("Posted blog post #{category.name}")
+    rescue Exception => e
+      require 'ruby-debug'; debugger; true;
+    end
   end
 end
 
@@ -126,7 +144,7 @@ Post.not_comments.all.each do |post|
     )
   rescue RestClient::Found => e
     uri = URI.parse(e.response.headers[:location])
-    post.update_attribute(:conductor_admin_path, uri)
+    post.update_attribute(:conductor_admin_path, uri.path)
     log.info("Posted blog post #{post.blogger_id}")
   rescue Exception => e
     require 'ruby-debug'; debugger; true;

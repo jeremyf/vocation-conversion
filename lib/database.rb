@@ -24,19 +24,26 @@ def init_db(force = false)
       table.column :content, :text
       table.column :published, :datetime
       table.column :updated, :datetime
+      table.column :title, :string
       table.column :thr_total, :integer
       table.column :thr_in_reply_to, :string
       table.column :conductor_admin_path, :string
     end
-  end
 
-  ActiveRecord::Schema.define do
+    create_table :categories, :force => force do |table|
+      table.column :name, :string
+      table.column :conductor_admin_path, :string
+    end
+    add_index :categories, :name
+
     create_table :assets, :force => force do |table|
       table.column :post_id, :integer
       table.column :source_url, :text
       table.column :conductor_asset_id, :integer
       table.column :local_filename, :text
     end
+    add_index :assets, :post_id
+
   end
 end
 
@@ -49,10 +56,18 @@ class Post < ActiveRecord::Base
   def news_attributes
     {
       :published_at => published,
+      :title => title,
       :content => content,
       :custom_author_name => "Holy Cross Vocations Indiana Province",
+      :category_ids => category_ids,
     }
   end
+
+  def category_ids
+    Category.where("#{Category.quoted_table_name}.name IN (?)", categories).collect(&:conductor_id)
+  end
+
+  after_save {|obj| obj.categories.each {|cat| Category.find_or_create_by_name(cat)}}
 end
 
 class Asset < ActiveRecord::Base
@@ -60,5 +75,15 @@ class Asset < ActiveRecord::Base
 
   def conductor_path
     "/assets/#{conductor_asset_id}/#{File.basename(local_filename)}"
+  end
+end
+
+class Category < ActiveRecord::Base
+  def conductor_attributes
+    {:name => name}
+  end
+
+  def conductor_id
+    conductor_admin_path.gsub(/^\/admin\/categories\//,'').to_i
   end
 end
