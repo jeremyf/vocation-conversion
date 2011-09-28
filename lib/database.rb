@@ -26,6 +26,7 @@ def init_db(force = false)
       table.column :updated, :datetime
       table.column :title, :string
       table.column :thr_total, :integer
+      table.column :from_url, :text
       table.column :thr_in_reply_to, :string
       table.column :conductor_admin_path, :string
     end
@@ -59,8 +60,16 @@ class Post < ActiveRecord::Base
       :title => title,
       :content => content,
       :custom_author_name => "Holy Cross Vocations Indiana Province",
-      :category_ids => category_ids,
+      :category_ids => category_ids
     }
+  end
+
+  def public_conductor_path
+    conductor_admin_path.sub("admin/",'')
+  end
+
+  def to_url
+    File.join("http://vocation.nd.edu",public_conductor_path)
   end
 
   def category_ids

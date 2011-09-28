@@ -14,6 +14,7 @@ GEM
     arel (2.0.10)
     builder (2.1.2)
     columnize (0.3.4)
+    fastercsv (1.5.4)
     highline (1.6.2)
     hpricot (0.8.4)
     i18n (0.6.0)
@@ -38,6 +39,7 @@ PLATFORMS
 DEPENDENCIES
   activerecord (= 3.0.5)
   activesupport (= 3.0.5)
+  fastercsv
   highline
   hpricot (= 0.8.4)
   libxml-ruby (= 1.1.4)
